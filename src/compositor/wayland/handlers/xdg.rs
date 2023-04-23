@@ -16,9 +16,9 @@ use smithay::{
     },
 };
 
-use crate::state::NoWayState;
+use crate::{backend::Backend, state::NoWayState};
 
-impl<BackendData: 'static> XdgActivationHandler for NoWayState<BackendData> {
+impl<BackendData: Backend + 'static> XdgActivationHandler for NoWayState<BackendData> {
     fn activation_state(&mut self) -> &mut XdgActivationState {
         todo!()
     }
@@ -42,9 +42,9 @@ impl<BackendData: 'static> XdgActivationHandler for NoWayState<BackendData> {
     }
 }
 
-delegate_xdg_activation!(@<BackendData: 'static> NoWayState<BackendData>);
+delegate_xdg_activation!(@<BackendData: Backend + 'static> NoWayState<BackendData>);
 
-impl<BackendData: 'static> XdgDecorationHandler for NoWayState<BackendData> {
+impl<BackendData: Backend + 'static> XdgDecorationHandler for NoWayState<BackendData> {
     fn new_decoration(&mut self, toplevel: ToplevelSurface) {
         todo!()
     }
@@ -58,9 +58,9 @@ impl<BackendData: 'static> XdgDecorationHandler for NoWayState<BackendData> {
     }
 }
 
-delegate_xdg_decoration!(@<BackendData: 'static> NoWayState<BackendData>);
+delegate_xdg_decoration!(@<BackendData: Backend + 'static> NoWayState<BackendData>);
 
-impl<BackendData: 'static> XdgShellHandler for NoWayState<BackendData> {
+impl<BackendData: Backend + 'static> XdgShellHandler for NoWayState<BackendData> {
     fn xdg_shell_state(&mut self) -> &mut XdgShellState {
         todo!()
     }
@@ -78,4 +78,4 @@ impl<BackendData: 'static> XdgShellHandler for NoWayState<BackendData> {
     }
 }
 
-delegate_xdg_shell!(@<BackendData: 'static> NoWayState<BackendData>);
+delegate_xdg_shell!(@<BackendData: Backend + 'static> NoWayState<BackendData>);

@@ -1,8 +1,6 @@
+pub mod backend;
 pub mod compositor;
-// mod focus;
 pub mod state;
-// mod window;
-mod winit;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     if let Ok(env_filter) = tracing_subscriber::EnvFilter::try_from_env("NOWAY_LOG") {
@@ -18,6 +16,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     tracing::info!("Starting NoWay");
-    winit::init_winit()?;
+    backend::winit::init_winit()?;
     Ok(())
 }

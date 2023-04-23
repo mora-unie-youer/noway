@@ -4,9 +4,9 @@ use smithay::{
     wayland::shell::wlr_layer::{Layer, LayerSurface, WlrLayerShellHandler, WlrLayerShellState},
 };
 
-use crate::state::NoWayState;
+use crate::{backend::Backend, state::NoWayState};
 
-impl<BackendData: 'static> WlrLayerShellHandler for NoWayState<BackendData> {
+impl<BackendData: Backend + 'static> WlrLayerShellHandler for NoWayState<BackendData> {
     fn shell_state(&mut self) -> &mut WlrLayerShellState {
         todo!()
     }
@@ -22,4 +22,4 @@ impl<BackendData: 'static> WlrLayerShellHandler for NoWayState<BackendData> {
     }
 }
 
-delegate_layer_shell!(@<BackendData: 'static> NoWayState<BackendData>);
+delegate_layer_shell!(@<BackendData: Backend + 'static> NoWayState<BackendData>);

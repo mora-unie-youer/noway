@@ -5,16 +5,16 @@ use smithay::reexports::{
     wayland_server::Display,
 };
 
-use crate::compositor::state::NoWayCompositorState;
+use crate::{backend::Backend, compositor::state::NoWayCompositorState};
 
 #[derive(Debug)]
-pub struct NoWayData<BackendData: 'static> {
+pub struct NoWayData<BackendData: Backend + 'static> {
     pub state: NoWayState<BackendData>,
     pub display: Display<NoWayState<BackendData>>,
 }
 
 #[derive(Debug)]
-pub struct NoWayState<BackendData: 'static> {
+pub struct NoWayState<BackendData: Backend + 'static> {
     pub start_time: Instant,
     pub handle: LoopHandle<'static, NoWayData<BackendData>>,
     pub signal: LoopSignal,
@@ -23,7 +23,7 @@ pub struct NoWayState<BackendData: 'static> {
     pub compositor: NoWayCompositorState<BackendData>,
 }
 
-impl<BackendData: 'static> NoWayState<BackendData> {
+impl<BackendData: Backend + 'static> NoWayState<BackendData> {
     pub fn new(
         handle: LoopHandle<'static, NoWayData<BackendData>>,
         signal: LoopSignal,

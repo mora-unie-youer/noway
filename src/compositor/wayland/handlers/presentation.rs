@@ -1,5 +1,5 @@
 use smithay::delegate_presentation;
 
-use crate::state::NoWayState;
+use crate::{backend::Backend, state::NoWayState};
 
-delegate_presentation!(@<BackendData: 'static> NoWayState<BackendData>);
+delegate_presentation!(@<BackendData: Backend + 'static> NoWayState<BackendData>);

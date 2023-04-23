@@ -5,14 +5,14 @@ use smithay::{
     },
 };
 
-use crate::state::NoWayState;
+use crate::{backend::Backend, state::NoWayState};
 
-impl<BackendData: 'static> ClientDndGrabHandler for NoWayState<BackendData> {}
-impl<BackendData: 'static> ServerDndGrabHandler for NoWayState<BackendData> {}
-impl<BackendData: 'static> DataDeviceHandler for NoWayState<BackendData> {
+impl<BackendData: Backend + 'static> ClientDndGrabHandler for NoWayState<BackendData> {}
+impl<BackendData: Backend + 'static> ServerDndGrabHandler for NoWayState<BackendData> {}
+impl<BackendData: Backend + 'static> DataDeviceHandler for NoWayState<BackendData> {
     fn data_device_state(&self) -> &DataDeviceState {
         todo!()
     }
 }
 
-delegate_data_device!(@<BackendData: 'static> NoWayState<BackendData>);
+delegate_data_device!(@<BackendData: Backend + 'static> NoWayState<BackendData>);

@@ -3,12 +3,12 @@ use smithay::{
     wayland::fractional_scale::FractionalScaleHandler,
 };
 
-use crate::state::NoWayState;
+use crate::{backend::Backend, state::NoWayState};
 
-impl<BackendData: 'static> FractionalScaleHandler for NoWayState<BackendData> {
+impl<BackendData: Backend + 'static> FractionalScaleHandler for NoWayState<BackendData> {
     fn new_fractional_scale(&mut self, surface: WlSurface) {
         todo!()
     }
 }
 
-delegate_fractional_scale!(@<BackendData: 'static> NoWayState<BackendData>);
+delegate_fractional_scale!(@<BackendData: Backend + 'static> NoWayState<BackendData>);

@@ -36,10 +36,13 @@ use smithay::{
     },
 };
 
-use crate::state::{NoWayData, NoWayState};
+use crate::{
+    backend::Backend,
+    state::{NoWayData, NoWayState},
+};
 
 #[derive(Debug)]
-pub struct NoWayCompositorState<BackendData: 'static> {
+pub struct NoWayCompositorState<BackendData: Backend + 'static> {
     pub socket_name: OsString,
     pub display_handle: DisplayHandle,
 
@@ -68,7 +71,7 @@ pub struct NoWayCompositorState<BackendData: 'static> {
     pub xdg_shell_state: XdgShellState,
 }
 
-impl<BackendData: 'static> NoWayCompositorState<BackendData> {
+impl<BackendData: Backend + 'static> NoWayCompositorState<BackendData> {
     pub fn new(
         handle: &LoopHandle<'static, NoWayData<BackendData>>,
         display: &mut Display<NoWayState<BackendData>>,

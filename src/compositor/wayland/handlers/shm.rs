@@ -7,18 +7,18 @@ use smithay::{
     },
 };
 
-use crate::state::NoWayState;
+use crate::{backend::Backend, state::NoWayState};
 
-impl<BackendData: 'static> BufferHandler for NoWayState<BackendData> {
+impl<BackendData: Backend + 'static> BufferHandler for NoWayState<BackendData> {
     fn buffer_destroyed(&mut self, buffer: &WlBuffer) {
         todo!()
     }
 }
 
-impl<BackendData: 'static> ShmHandler for NoWayState<BackendData> {
+impl<BackendData: Backend + 'static> ShmHandler for NoWayState<BackendData> {
     fn shm_state(&self) -> &ShmState {
         todo!()
     }
 }
 
-delegate_shm!(@<BackendData: 'static> NoWayState<BackendData>);
+delegate_shm!(@<BackendData: Backend + 'static> NoWayState<BackendData>);

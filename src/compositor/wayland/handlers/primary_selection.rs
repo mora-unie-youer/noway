@@ -3,12 +3,12 @@ use smithay::{
     wayland::primary_selection::{PrimarySelectionHandler, PrimarySelectionState},
 };
 
-use crate::state::NoWayState;
+use crate::{backend::Backend, state::NoWayState};
 
-impl<BackendData: 'static> PrimarySelectionHandler for NoWayState<BackendData> {
+impl<BackendData: Backend + 'static> PrimarySelectionHandler for NoWayState<BackendData> {
     fn primary_selection_state(&self) -> &PrimarySelectionState {
         todo!()
     }
 }
 
-delegate_primary_selection!(@<BackendData: 'static> NoWayState<BackendData>);
+delegate_primary_selection!(@<BackendData: Backend + 'static> NoWayState<BackendData>);

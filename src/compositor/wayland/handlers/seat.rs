@@ -3,9 +3,9 @@ use smithay::{
     input::{SeatHandler, SeatState},
 };
 
-use crate::state::NoWayState;
+use crate::{backend::Backend, state::NoWayState};
 
-impl<BackendData> SeatHandler for NoWayState<BackendData> {
+impl<BackendData: Backend + 'static> SeatHandler for NoWayState<BackendData> {
     // TODO: make complex focus target
     type KeyboardFocus = Window;
     type PointerFocus = Window;

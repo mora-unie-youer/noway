@@ -3,12 +3,12 @@ use smithay::{
     wayland::shell::kde::decoration::{KdeDecorationHandler, KdeDecorationState},
 };
 
-use crate::state::NoWayState;
+use crate::{backend::Backend, state::NoWayState};
 
-impl<BackendData: 'static> KdeDecorationHandler for NoWayState<BackendData> {
+impl<BackendData: Backend + 'static> KdeDecorationHandler for NoWayState<BackendData> {
     fn kde_decoration_state(&self) -> &KdeDecorationState {
         todo!()
     }
 }
 
-delegate_kde_decoration!(@<BackendData: 'static> NoWayState<BackendData>);
+delegate_kde_decoration!(@<BackendData: Backend + 'static> NoWayState<BackendData>);

@@ -1,5 +1,5 @@
 use smithay::delegate_viewporter;
 
-use crate::state::NoWayState;
+use crate::{backend::Backend, state::NoWayState};
 
-delegate_viewporter!(@<BackendData: 'static> NoWayState<BackendData>);
+delegate_viewporter!(@<BackendData: Backend + 'static> NoWayState<BackendData>);

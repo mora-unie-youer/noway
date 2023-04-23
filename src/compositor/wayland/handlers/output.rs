@@ -1,5 +1,5 @@
 use smithay::delegate_output;
 
-use crate::state::NoWayState;
+use crate::{backend::Backend, state::NoWayState};
 
-delegate_output!(@<BackendData: 'static> NoWayState<BackendData>);
+delegate_output!(@<BackendData: Backend + 'static> NoWayState<BackendData>);
