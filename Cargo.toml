@@ -2,6 +2,13 @@
 name = "noway"
 version = "0.1.0"
 edition = "2021"
+authors = ["Mora Unie Youer <mora_unie_youer@riseup.net>"]
+description = "An attempt to create fast and configurable Wayland compositor in Rust"
+license = "MIT"
+repository = "https://github.com/mora-unie-youer/noway"
+readme = "README.md"
+keywords = ["wayland", "compositor", "smithay"]
+categories = ["window-managers"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

@@ -1,5 +1,5 @@
 {
-  description = "noway - Wayland compositor written in Rust";
+  description = "noway - An attempt to create fast and configurable Wayland compositor in Rust";
 
   inputs = {
     flake-utils.url = "github:numtide/flake-utils";
