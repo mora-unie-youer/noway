@@ -1,4 +1,5 @@
 use smithay::{
+    delegate_seat,
     desktop::Window,
     input::{SeatHandler, SeatState},
 };
@@ -11,6 +12,8 @@ impl<BackendData: Backend + 'static> SeatHandler for NoWayState<BackendData> {
     type PointerFocus = Window;
 
     fn seat_state(&mut self) -> &mut SeatState<Self> {
-        todo!()
+        &mut self.compositor.seat_state
     }
 }
+
+delegate_seat!(@<BackendData: Backend + 'static> NoWayState<BackendData>);
