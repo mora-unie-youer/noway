@@ -10,14 +10,12 @@ use smithay::{
 use crate::{backend::Backend, state::NoWayState};
 
 impl<BackendData: Backend + 'static> BufferHandler for NoWayState<BackendData> {
-    fn buffer_destroyed(&mut self, buffer: &WlBuffer) {
-        todo!()
-    }
+    fn buffer_destroyed(&mut self, _buffer: &WlBuffer) {}
 }
 
 impl<BackendData: Backend + 'static> ShmHandler for NoWayState<BackendData> {
     fn shm_state(&self) -> &ShmState {
-        todo!()
+        &self.compositor.shm_state
     }
 }
 
