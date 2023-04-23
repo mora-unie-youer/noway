@@ -1,6 +1,15 @@
+pub mod compositor;
+// mod focus;
+pub mod state;
+// mod window;
+mod winit;
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     if let Ok(env_filter) = tracing_subscriber::EnvFilter::try_from_env("NOWAY_LOG") {
-        tracing::info!("Logging is being initialized with env filter: {}", env_filter);
+        tracing::info!(
+            "Logging is being initialized with env filter: {}",
+            env_filter
+        );
         tracing_subscriber::fmt().with_env_filter(env_filter).init();
         tracing::info!("Initialized logging with env filter successfully");
     } else {
@@ -8,6 +17,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         tracing::info!("Initialized logging with default filter successfully");
     }
 
-    tracing::info!("Hello, world!");
+    tracing::info!("Starting NoWay");
+    winit::init_winit()?;
     Ok(())
 }
