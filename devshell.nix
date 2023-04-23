@@ -2,6 +2,11 @@
 
 pkgs.devShell.mkShell {
   name = "noway";
+
+  env = {
+    RUST_BACKTRACE = "1";
+  };
+
   packages = with pkgs; [
     # Toolchain required for C + Rust binaries building
     binutils

@@ -177,8 +177,8 @@ pub fn winit_dispatch(
     let state = &mut data.state;
     let backend = &mut state.backend;
 
-    let res = winit.dispatch_new_events(|event| match event {
-        WinitEvent::Resized { size, .. } => {
+    let res = winit.dispatch_new_events(|event| {
+        if let WinitEvent::Resized { size, .. } = event {
             output.change_current_state(
                 Some(Mode {
                     size,
@@ -188,9 +188,9 @@ pub fn winit_dispatch(
                 None,
                 None,
             );
+
             tracing::debug!("Resized to {:?}", size);
         }
-        _ => (),
     });
 
     if let Err(WinitError::WindowClosed) = res {
