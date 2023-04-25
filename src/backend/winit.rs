@@ -98,8 +98,7 @@ pub fn winit_dispatch(
                 None,
             );
         }
-        // TODO: make input handling
-        WinitEvent::Input(_) => (),
+        WinitEvent::Input(event) => state.process_input_event(event),
         _ => (),
     });
 
