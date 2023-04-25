@@ -286,6 +286,13 @@ impl KeyboardTarget<NoWayState> for WindowElement {
 }
 
 impl SpaceElement for WindowElement {
+    fn geometry(&self) -> Rectangle<i32, Logical> {
+        match self {
+            Self::Xdg(w) => w.geometry(),
+            Self::X11(w) => w.geometry(),
+        }
+    }
+
     fn bbox(&self) -> Rectangle<i32, Logical> {
         match self {
             Self::Xdg(w) => w.bbox(),

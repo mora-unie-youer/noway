@@ -1,17 +1,26 @@
+use std::cell::RefCell;
+
 use smithay::{
     delegate_xdg_shell,
-    desktop::Window,
+    desktop::{space::SpaceElement, Window},
     input::{
         pointer::{Focus, GrabStartData},
         Seat,
     },
-    reexports::wayland_server::{
-        protocol::{wl_seat::WlSeat, wl_surface::WlSurface},
-        Resource,
+    reexports::{
+        wayland_protocols::xdg::shell::server::xdg_toplevel,
+        wayland_server::{
+            protocol::{
+                wl_seat::{self, WlSeat},
+                wl_surface::WlSurface,
+            },
+            Resource,
+        },
     },
     utils::Serial,
     wayland::{
-        compositor::with_states,
+        compositor::{with_states, with_surface_tree_upward, TraversalAction},
+        seat::WaylandFocus,
         shell::xdg::{
             PopupSurface, PositionerState, ToplevelSurface, XdgShellHandler, XdgShellState,
             XdgToplevelSurfaceData,
@@ -19,10 +28,30 @@ use smithay::{
     },
 };
 
-use crate::{grabs::move_grab::MoveSurfaceGrab, render::window::WindowElement, state::NoWayState};
+use crate::{
+    grabs::{
+        move_grab::MoveSurfaceGrab,
+        resize_grab::{ResizeData, ResizeState, ResizeSurfaceGrab},
+        SurfaceData,
+    },
+    render::window::WindowElement,
+    state::NoWayState,
+};
 
 impl NoWayState {
     pub fn commit_xdg_surface(&self, surface: &WlSurface) {
+        with_surface_tree_upward(
+            surface,
+            (),
+            |_, _, _| TraversalAction::DoChildren(()),
+            |_, states, _| {
+                states
+                    .data_map
+                    .insert_if_missing(|| RefCell::new(SurfaceData::default()));
+            },
+            |_, _, _| true,
+        );
+
         if let Some(WindowElement::Xdg(window)) = self.window_for_surface(surface) {
             let initial_configure_sent = with_states(surface, |states| {
                 states
@@ -38,6 +67,17 @@ impl NoWayState {
                 window.toplevel().send_configure();
             }
         }
+
+        with_states(surface, |states| {
+            let mut data = states
+                .data_map
+                .get::<RefCell<SurfaceData>>()
+                .unwrap()
+                .borrow_mut();
+            if let ResizeState::WaitingForCommit(_) = data.resize_state {
+                data.resize_state = ResizeState::NotResizing;
+            }
+        });
     }
 
     fn check_grab(
@@ -93,6 +133,67 @@ impl XdgShellHandler for NoWayState {
                 Focus::Clear,
             );
         }
+    }
+
+    fn resize_request(
+        &mut self,
+        surface: ToplevelSurface,
+        seat: wl_seat::WlSeat,
+        serial: Serial,
+        edges: xdg_toplevel::ResizeEdge,
+    ) {
+        let seat: Seat<Self> = Seat::from_resource(&seat).unwrap();
+        // TODO: touch resize.
+        let pointer = seat.get_pointer().unwrap();
+
+        // Check that this surface has a click grab.
+        if !pointer.has_grab(serial) {
+            return;
+        }
+
+        let start_data = pointer.grab_start_data().unwrap();
+
+        let window = self.window_for_surface(surface.wl_surface()).unwrap();
+
+        // If the focus was for a different surface, ignore the request.
+        if start_data.focus.is_none()
+            || !start_data
+                .focus
+                .as_ref()
+                .unwrap()
+                .0
+                .same_client_as(&surface.wl_surface().id())
+        {
+            return;
+        }
+
+        let geometry = window.geometry();
+        let loc = self.space.element_location(&window).unwrap();
+        let (initial_window_location, initial_window_size) = (loc, geometry.size);
+
+        with_states(surface.wl_surface(), move |states| {
+            states
+                .data_map
+                .get::<RefCell<SurfaceData>>()
+                .unwrap()
+                .borrow_mut()
+                .resize_state = ResizeState::Resizing(ResizeData {
+                edges: edges.into(),
+                initial_window_location,
+                initial_window_size,
+            });
+        });
+
+        let grab = ResizeSurfaceGrab {
+            start_data,
+            window,
+            edges: edges.into(),
+            initial_window_location,
+            initial_window_size,
+            last_window_size: initial_window_size,
+        };
+
+        pointer.set_grab(self, grab, serial, Focus::Clear);
     }
 
     fn new_popup(&mut self, _surface: PopupSurface, _positioner: PositionerState) {
