@@ -1,20 +1,26 @@
-use std::time::Duration;
+use std::{sync::Mutex, time::Duration};
 
 use smithay::{
     backend::{
-        renderer::{damage::OutputDamageTracker, gles::GlesRenderer},
+        renderer::{
+            damage::OutputDamageTracker,
+            element::AsRenderElements,
+            gles::{GlesRenderer, GlesTexture},
+        },
         winit::{self, WinitError, WinitEvent, WinitEventLoop, WinitGraphicsBackend},
     },
+    input::pointer::{CursorImageAttributes, CursorImageStatus},
     output::{Mode, Output, PhysicalProperties, Subpixel},
     reexports::calloop::{
         timer::{TimeoutAction, Timer},
         EventLoop,
     },
-    utils::Transform,
+    utils::{IsAlive, Scale, Transform},
+    wayland::compositor,
 };
 
 use crate::{
-    render::render_output,
+    render::{pointer::PointerElement, render_output},
     state::{NoWayData, NoWayState},
 };
 
@@ -52,6 +58,7 @@ pub fn initialize_winit(
     state.space.map_output(&output, (0, 0));
 
     let mut damage_tracker = OutputDamageTracker::from_output(&output);
+    let mut pointer_element = PointerElement::default();
     let mut full_redraw = 4u8;
 
     std::env::set_var("WAYLAND_DISPLAY", &state.socket_name);
@@ -66,6 +73,7 @@ pub fn initialize_winit(
                 data,
                 &output,
                 &mut damage_tracker,
+                &mut pointer_element,
                 &mut full_redraw,
             )
             .unwrap();
@@ -81,6 +89,7 @@ pub fn winit_dispatch(
     data: &mut NoWayData,
     output: &Output,
     damage_tracker: &mut OutputDamageTracker,
+    pointer_element: &mut PointerElement<GlesTexture>,
     full_redraw: &mut u8,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let display = &mut data.display;
@@ -110,17 +119,49 @@ pub fn winit_dispatch(
     }
 
     *full_redraw = full_redraw.saturating_sub(1);
+    let scale = Scale::from(output.current_scale().fractional_scale());
+
+    let mut cursor_guard = state.cursor_status.lock().unwrap();
+    if let CursorImageStatus::Surface(surface) = cursor_guard.clone() {
+        if !surface.alive() {
+            *cursor_guard = CursorImageStatus::Default;
+        }
+    }
+    pointer_element.set_status(cursor_guard.clone());
+    let cursor_visible = !matches!(*cursor_guard, CursorImageStatus::Surface(_));
+
+    let cursor_hotspot = if let CursorImageStatus::Surface(ref surface) = *cursor_guard {
+        compositor::with_states(surface, |states| {
+            states
+                .data_map
+                .get::<Mutex<CursorImageAttributes>>()
+                .unwrap()
+                .lock()
+                .unwrap()
+                .hotspot
+        })
+    } else {
+        (0, 0).into()
+    };
+    let cursor_pos = state.pointer_location - cursor_hotspot.to_f64();
+    let cursor_pos_scaled = cursor_pos.to_physical(scale).to_i32_round();
+
+    backend.bind()?;
     let age = if *full_redraw > 0 {
         0
     } else {
         backend.buffer_age().unwrap_or(0)
     };
 
-    backend.bind()?;
+    let renderer = backend.renderer();
+    let mut custom_elements = Vec::new();
+    custom_elements.extend(pointer_element.render_elements(renderer, cursor_pos_scaled, scale));
+
     let (damage, _) = render_output(
         output,
         &state.space,
-        backend.renderer(),
+        custom_elements,
+        renderer,
         damage_tracker,
         age,
     )?;
@@ -138,6 +179,7 @@ pub fn winit_dispatch(
         )
     });
 
+    backend.window().set_cursor_visible(cursor_visible);
     state.space.refresh();
     display.flush_clients()?;
 

@@ -1,8 +1,13 @@
-use std::{ffi::OsString, os::fd::AsRawFd, sync::Arc, time::Instant};
+use std::{
+    ffi::OsString,
+    os::fd::AsRawFd,
+    sync::{Arc, Mutex},
+    time::Instant,
+};
 
 use smithay::{
     desktop::Space,
-    input::{Seat, SeatState},
+    input::{pointer::CursorImageStatus, Seat, SeatState},
     reexports::{
         calloop::{generic::Generic, Interest, LoopHandle, LoopSignal, Mode, PostAction},
         wayland_server::{
@@ -10,6 +15,7 @@ use smithay::{
             Display, DisplayHandle,
         },
     },
+    utils::{Logical, Point},
     wayland::{
         compositor::CompositorState, data_device::DataDeviceState, output::OutputManagerState,
         shell::xdg::XdgShellState, shm::ShmState, socket::ListeningSocketSource,
@@ -37,8 +43,11 @@ pub struct NoWayState {
     pub loop_signal: LoopSignal,
 
     pub socket_name: OsString,
-    pub seat: Seat<Self>,
     pub space: Space<WindowElement>,
+
+    pub cursor_status: Arc<Mutex<CursorImageStatus>>,
+    pub pointer_location: Point<f64, Logical>,
+    pub seat: Seat<Self>,
 
     pub display_handle: DisplayHandle,
     pub compositor_state: CompositorState,
@@ -78,8 +87,11 @@ impl NoWayState {
             loop_signal,
 
             socket_name,
-            seat,
             space,
+
+            cursor_status: Arc::new(Mutex::new(CursorImageStatus::Default)),
+            pointer_location: (100.0, 100.0).into(),
+            seat,
 
             display_handle: dh,
             compositor_state,

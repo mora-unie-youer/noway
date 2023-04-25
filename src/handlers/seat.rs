@@ -6,8 +6,8 @@ use smithay::{
     delegate_seat,
     input::{
         keyboard::FilterResult,
-        pointer::{AxisFrame, ButtonEvent, MotionEvent},
-        SeatHandler, SeatState,
+        pointer::{AxisFrame, ButtonEvent, CursorImageStatus, MotionEvent},
+        Seat, SeatHandler, SeatState,
     },
     reexports::wayland_server::protocol::wl_surface::WlSurface,
     utils::SERIAL_COUNTER,
@@ -50,6 +50,8 @@ impl NoWayState {
                         time: event.time_msec(),
                     },
                 );
+
+                self.pointer_location = pointer.current_location();
             }
             InputEvent::PointerButton { event, .. } => {
                 let pointer = self.seat.get_pointer().unwrap();
@@ -137,6 +139,10 @@ impl SeatHandler for NoWayState {
 
     fn seat_state(&mut self) -> &mut SeatState<Self> {
         &mut self.seat_state
+    }
+
+    fn cursor_image(&mut self, _seat: &Seat<Self>, image: CursorImageStatus) {
+        *self.cursor_status.lock().unwrap() = image;
     }
 }
 

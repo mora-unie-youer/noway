@@ -10,8 +10,13 @@ use smithay::{
     utils::{Physical, Rectangle},
 };
 
-use self::window::{WindowElement, WindowRenderElement};
+use self::{
+    custom::CustomRenderElements,
+    window::{WindowElement, WindowRenderElement},
+};
 
+pub mod custom;
+pub mod pointer;
 pub mod window;
 
 render_elements! {
@@ -19,6 +24,7 @@ render_elements! {
         where R: ImportAll + ImportMem;
     Space=SpaceRenderElements<R, E>,
     Window=Wrap<E>,
+    Custom=CustomRenderElements<R>,
 }
 
 impl<R, E> std::fmt::Debug for OutputRenderElements<R, E>
@@ -31,6 +37,7 @@ where
         match self {
             Self::Space(arg0) => f.debug_tuple("Space").field(arg0).finish(),
             Self::Window(arg0) => f.debug_tuple("Window").field(arg0).finish(),
+            Self::Custom(arg0) => f.debug_tuple("Custom").field(arg0).finish(),
             Self::_GenericCatcher(arg0) => f.debug_tuple("_GenericCatcher").field(arg0).finish(),
         }
     }
@@ -39,13 +46,17 @@ where
 pub fn output_elements<R>(
     output: &Output,
     space: &Space<WindowElement>,
+    custom_elements: impl IntoIterator<Item = CustomRenderElements<R>>,
     renderer: &mut R,
 ) -> Vec<OutputRenderElements<R, WindowRenderElement<R>>>
 where
     R: Renderer + ImportAll + ImportMem,
     R::TextureId: Clone + 'static,
 {
-    let mut output_render_elements = Vec::new();
+    let mut output_render_elements = custom_elements
+        .into_iter()
+        .map(OutputRenderElements::from)
+        .collect::<Vec<_>>();
 
     let space_elements = space_render_elements(renderer, [space], output).unwrap();
     output_render_elements.extend(space_elements.into_iter().map(OutputRenderElements::Space));
@@ -57,6 +68,7 @@ type Damage = Vec<Rectangle<i32, Physical>>;
 pub fn render_output<R>(
     output: &Output,
     space: &Space<WindowElement>,
+    custom_elements: impl IntoIterator<Item = CustomRenderElements<R>>,
     renderer: &mut R,
     damage_tracker: &mut OutputDamageTracker,
     age: usize,
@@ -65,6 +77,6 @@ where
     R: Renderer + ImportAll + ImportMem,
     R::TextureId: Clone + 'static,
 {
-    let elements = output_elements(output, space, renderer);
+    let elements = output_elements(output, space, custom_elements, renderer);
     damage_tracker.render_output(renderer, age, &elements, [0.1, 0.1, 0.1, 1.0])
 }
