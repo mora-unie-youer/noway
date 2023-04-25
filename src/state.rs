@@ -3,15 +3,15 @@ use std::{ffi::OsString, os::fd::AsRawFd, sync::Arc, time::Instant};
 use smithay::{
     desktop::{Space, Window},
     reexports::{
-        calloop::{
-            generic::Generic, Interest, LoopHandle, LoopSignal, Mode, PostAction,
-        },
+        calloop::{generic::Generic, Interest, LoopHandle, LoopSignal, Mode, PostAction},
         wayland_server::{
             backend::{ClientData, ClientId, DisconnectReason},
             Display, DisplayHandle,
         },
     },
-    wayland::{socket::ListeningSocketSource, output::OutputManagerState},
+    wayland::{
+        compositor::CompositorState, output::OutputManagerState, socket::ListeningSocketSource,
+    },
 };
 
 pub struct ClientState;
@@ -36,6 +36,7 @@ pub struct NoWayState {
     pub space: Space<Window>,
 
     pub display_handle: DisplayHandle,
+    pub compositor_state: CompositorState,
     pub output_manager_state: OutputManagerState,
 }
 
@@ -51,6 +52,7 @@ impl NoWayState {
         let space = Space::default();
 
         let dh = display.handle();
+        let compositor_state = CompositorState::new::<Self>(&dh);
         let output_manager_state = OutputManagerState::new_with_xdg_output::<Self>(&dh);
 
         Ok(Self {
@@ -60,8 +62,9 @@ impl NoWayState {
 
             socket_name,
             space,
-            
+
             display_handle: dh,
+            compositor_state,
             output_manager_state,
         })
     }

@@ -2,12 +2,18 @@ use std::time::Duration;
 
 use smithay::{
     backend::{
-        renderer::{damage::OutputDamageTracker, gles::GlesRenderer, element::surface::WaylandSurfaceRenderElement},
+        renderer::{
+            damage::OutputDamageTracker, element::surface::WaylandSurfaceRenderElement,
+            gles::GlesRenderer,
+        },
         winit::{self, WinitError, WinitEvent, WinitEventLoop, WinitGraphicsBackend},
     },
     output::{Mode, Output, PhysicalProperties, Subpixel},
-    reexports::calloop::{timer::{TimeoutAction, Timer}, EventLoop},
-    utils::{Transform, Rectangle},
+    reexports::calloop::{
+        timer::{TimeoutAction, Timer},
+        EventLoop,
+    },
+    utils::{Rectangle, Transform},
 };
 
 use crate::state::{NoWayData, NoWayState};
