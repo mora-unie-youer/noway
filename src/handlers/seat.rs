@@ -13,7 +13,7 @@ use smithay::{
     utils::SERIAL_COUNTER,
 };
 
-use crate::state::NoWayState;
+use crate::{render::window::WindowElement, state::NoWayState};
 
 impl NoWayState {
     pub fn process_input_event<I: InputBackend>(&mut self, event: InputEvent<I>) {
@@ -64,21 +64,21 @@ impl NoWayState {
                         let window = window.clone();
                         self.space.raise_element(&window, true);
                         self.space.elements().for_each(|window| {
-                            window.toplevel().send_configure();
+                            if let WindowElement::Xdg(window) = window {
+                                window.toplevel().send_configure();
+                            }
                         });
 
-                        keyboard.set_focus(
-                            self,
-                            Some(window.toplevel().wl_surface().clone()),
-                            serial,
-                        );
+                        keyboard.set_focus(self, Some(window.wl_surface().unwrap()), serial);
                     } else {
                         self.space.elements().for_each(|window| {
-                            window.set_activated(false);
-                            window.toplevel().send_configure();
+                            if let WindowElement::Xdg(window) = window {
+                                window.set_activated(false);
+                                window.toplevel().send_configure();
+                            }
                         });
 
-                        keyboard.set_focus(self, Option::<WlSurface>::None, serial);
+                        keyboard.set_focus(self, None, serial);
                     }
                 };
 

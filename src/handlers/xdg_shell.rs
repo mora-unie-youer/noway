@@ -19,11 +19,11 @@ use smithay::{
     },
 };
 
-use crate::{grabs::move_grab::MoveSurfaceGrab, state::NoWayState};
+use crate::{grabs::move_grab::MoveSurfaceGrab, render::window::WindowElement, state::NoWayState};
 
 impl NoWayState {
     pub fn commit_xdg_surface(&self, surface: &WlSurface) {
-        if let Some(window) = self.window_for_surface(surface) {
+        if let Some(WindowElement::Xdg(window)) = self.window_for_surface(surface) {
             let initial_configure_sent = with_states(surface, |states| {
                 states
                     .data_map
@@ -68,7 +68,7 @@ impl XdgShellHandler for NoWayState {
     }
 
     fn new_toplevel(&mut self, surface: ToplevelSurface) {
-        let window = Window::new(surface);
+        let window = WindowElement::Xdg(Window::new(surface));
         self.space.map_element(window, (0, 0), false);
     }
 

@@ -9,6 +9,7 @@ use crate::{
 pub mod backend;
 pub mod grabs;
 pub mod handlers;
+pub mod render;
 pub mod state;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {

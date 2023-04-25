@@ -1,7 +1,7 @@
 use std::{ffi::OsString, os::fd::AsRawFd, sync::Arc, time::Instant};
 
 use smithay::{
-    desktop::{Space, Window},
+    desktop::Space,
     input::{Seat, SeatState},
     reexports::{
         calloop::{generic::Generic, Interest, LoopHandle, LoopSignal, Mode, PostAction},
@@ -15,6 +15,8 @@ use smithay::{
         shell::xdg::XdgShellState, shm::ShmState, socket::ListeningSocketSource,
     },
 };
+
+use crate::render::window::WindowElement;
 
 pub struct ClientState;
 impl ClientData for ClientState {
@@ -36,7 +38,7 @@ pub struct NoWayState {
 
     pub socket_name: OsString,
     pub seat: Seat<Self>,
-    pub space: Space<Window>,
+    pub space: Space<WindowElement>,
 
     pub display_handle: DisplayHandle,
     pub compositor_state: CompositorState,

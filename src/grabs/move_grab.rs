@@ -1,5 +1,4 @@
 use smithay::{
-    desktop::Window,
     input::pointer::{
         AxisFrame, ButtonEvent, GrabStartData, MotionEvent, PointerGrab, PointerInnerHandle,
         RelativeMotionEvent,
@@ -8,11 +7,11 @@ use smithay::{
     utils::{Logical, Point},
 };
 
-use crate::state::NoWayState;
+use crate::{render::window::WindowElement, state::NoWayState};
 
 pub struct MoveSurfaceGrab {
     pub start_data: GrabStartData<NoWayState>,
-    pub window: Window,
+    pub window: WindowElement,
     pub initial_window_location: Point<i32, Logical>,
 }
 

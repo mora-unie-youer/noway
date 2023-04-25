@@ -2,10 +2,7 @@ use std::time::Duration;
 
 use smithay::{
     backend::{
-        renderer::{
-            damage::OutputDamageTracker, element::surface::WaylandSurfaceRenderElement,
-            gles::GlesRenderer,
-        },
+        renderer::{damage::OutputDamageTracker, gles::GlesRenderer},
         winit::{self, WinitError, WinitEvent, WinitEventLoop, WinitGraphicsBackend},
     },
     output::{Mode, Output, PhysicalProperties, Subpixel},
@@ -13,10 +10,13 @@ use smithay::{
         timer::{TimeoutAction, Timer},
         EventLoop,
     },
-    utils::{Rectangle, Transform},
+    utils::Transform,
 };
 
-use crate::state::{NoWayData, NoWayState};
+use crate::{
+    render::render_output,
+    state::{NoWayData, NoWayState},
+};
 
 pub fn initialize_winit(
     event_loop: &mut EventLoop<NoWayData>,
@@ -52,7 +52,7 @@ pub fn initialize_winit(
     state.space.map_output(&output, (0, 0));
 
     let mut damage_tracker = OutputDamageTracker::from_output(&output);
-    let mut full_redraw = 0u8;
+    let mut full_redraw = 4u8;
 
     std::env::set_var("WAYLAND_DISPLAY", &state.socket_name);
 
@@ -110,21 +110,24 @@ pub fn winit_dispatch(
     }
 
     *full_redraw = full_redraw.saturating_sub(1);
-
-    let size = backend.window_size().physical_size;
-    let damage = Rectangle::from_loc_and_size((0, 0), size);
+    let age = if *full_redraw > 0 {
+        0
+    } else {
+        backend.buffer_age().unwrap_or(0)
+    };
 
     backend.bind()?;
-    smithay::desktop::space::render_output::<_, WaylandSurfaceRenderElement<GlesRenderer>, _, _>(
+    let (damage, _) = render_output(
         output,
+        &state.space,
         backend.renderer(),
-        0,
-        [&state.space],
-        &[],
         damage_tracker,
-        [0.1, 0.1, 0.1, 1.0],
+        age,
     )?;
-    backend.submit(Some(&[damage]))?;
+
+    if let Some(damage) = damage {
+        backend.submit(Some(&damage))?;
+    }
 
     state.space.elements().for_each(|window| {
         window.send_frame(

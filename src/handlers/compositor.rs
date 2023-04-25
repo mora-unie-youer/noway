@@ -1,27 +1,27 @@
 use smithay::{
     backend::renderer::utils::on_commit_buffer_handler,
     delegate_compositor,
-    desktop::{Window, WindowSurfaceType},
+    desktop::WindowSurfaceType,
     input::pointer::PointerHandle,
     reexports::wayland_server::protocol::wl_surface::WlSurface,
     utils::{Logical, Point},
     wayland::compositor::{get_parent, is_sync_subsurface, CompositorHandler, CompositorState},
 };
 
-use crate::state::NoWayState;
+use crate::{render::window::WindowElement, state::NoWayState};
 
 impl NoWayState {
-    pub fn window_for_surface(&self, surface: &WlSurface) -> Option<Window> {
+    pub fn window_for_surface(&self, surface: &WlSurface) -> Option<WindowElement> {
         self.space
             .elements()
-            .find(|window| window.toplevel().wl_surface() == surface)
+            .find(|window| window.wl_surface().map(|s| &s == surface).unwrap_or(false))
             .cloned()
     }
 
     pub fn window_under_pointer(
         &self,
         pointer: &PointerHandle<Self>,
-    ) -> Option<(&Window, Point<i32, Logical>)> {
+    ) -> Option<(&WindowElement, Point<i32, Logical>)> {
         let pos = pointer.current_location();
         self.space.element_under(pos)
     }
@@ -53,7 +53,7 @@ impl CompositorHandler for NoWayState {
                 root = parent;
             }
 
-            if let Some(window) = self.window_for_surface(surface) {
+            if let Some(WindowElement::Xdg(window)) = self.window_for_surface(surface) {
                 window.on_commit();
             }
         };
