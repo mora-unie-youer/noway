@@ -1,9 +1,5 @@
 use tracing::Level;
 
-pub mod backend;
-pub mod compositor;
-pub mod state;
-
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     if let Ok(env_filter) = tracing_subscriber::EnvFilter::try_from_env("NOWAY_LOG") {
         tracing::info!(
@@ -24,6 +20,5 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     tracing::info!("Starting NoWay");
-    backend::winit::init_winit()?;
     Ok(())
 }
