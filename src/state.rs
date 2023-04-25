@@ -2,6 +2,7 @@ use std::{ffi::OsString, os::fd::AsRawFd, sync::Arc, time::Instant};
 
 use smithay::{
     desktop::{Space, Window},
+    input::{Seat, SeatState},
     reexports::{
         calloop::{generic::Generic, Interest, LoopHandle, LoopSignal, Mode, PostAction},
         wayland_server::{
@@ -34,11 +35,13 @@ pub struct NoWayState {
     pub loop_signal: LoopSignal,
 
     pub socket_name: OsString,
+    pub seat: Seat<Self>,
     pub space: Space<Window>,
 
     pub display_handle: DisplayHandle,
     pub compositor_state: CompositorState,
     pub output_manager_state: OutputManagerState,
+    pub seat_state: SeatState<Self>,
     pub shm_state: ShmState,
     pub xdg_shell_state: XdgShellState,
 }
@@ -57,8 +60,13 @@ impl NoWayState {
         let dh = display.handle();
         let compositor_state = CompositorState::new::<Self>(&dh);
         let output_manager_state = OutputManagerState::new_with_xdg_output::<Self>(&dh);
+        let mut seat_state = SeatState::new();
         let shm_state = ShmState::new::<Self>(&dh, vec![]);
         let xdg_shell_state = XdgShellState::new::<Self>(&dh);
+
+        let mut seat = seat_state.new_wl_seat(&dh, "winit");
+        seat.add_keyboard(Default::default(), 200, 50).unwrap();
+        seat.add_pointer();
 
         Ok(Self {
             start_time,
@@ -66,11 +74,13 @@ impl NoWayState {
             loop_signal,
 
             socket_name,
+            seat,
             space,
 
             display_handle: dh,
             compositor_state,
             output_manager_state,
+            seat_state,
             shm_state,
             xdg_shell_state,
         })
