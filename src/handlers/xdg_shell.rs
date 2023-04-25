@@ -1,14 +1,38 @@
 use smithay::{
     delegate_xdg_shell,
     desktop::Window,
-    reexports::wayland_server::protocol::wl_seat::WlSeat,
+    reexports::wayland_server::protocol::{wl_seat::WlSeat, wl_surface::WlSurface},
     utils::Serial,
-    wayland::shell::xdg::{
-        PopupSurface, PositionerState, ToplevelSurface, XdgShellHandler, XdgShellState,
+    wayland::{
+        compositor::with_states,
+        shell::xdg::{
+            PopupSurface, PositionerState, ToplevelSurface, XdgShellHandler, XdgShellState,
+            XdgToplevelSurfaceData,
+        },
     },
 };
 
 use crate::state::NoWayState;
+
+impl NoWayState {
+    pub fn commit_xdg_surface(&self, surface: &WlSurface) {
+        if let Some(window) = self.window_for_surface(surface) {
+            let initial_configure_sent = with_states(surface, |states| {
+                states
+                    .data_map
+                    .get::<XdgToplevelSurfaceData>()
+                    .unwrap()
+                    .lock()
+                    .unwrap()
+                    .initial_configure_sent
+            });
+
+            if !initial_configure_sent {
+                window.toplevel().send_configure();
+            }
+        }
+    }
+}
 
 impl XdgShellHandler for NoWayState {
     fn xdg_shell_state(&mut self) -> &mut XdgShellState {
