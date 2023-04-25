@@ -7,6 +7,7 @@ use crate::{
 };
 
 pub mod backend;
+pub mod grabs;
 pub mod handlers;
 pub mod state;
 
