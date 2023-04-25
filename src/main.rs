@@ -1,4 +1,14 @@
+use smithay::reexports::{calloop::EventLoop, wayland_server::Display};
 use tracing::Level;
+
+use crate::{
+    backend::winit::initialize_winit,
+    state::{NoWayData, NoWayState},
+};
+
+pub mod backend;
+pub mod handlers;
+pub mod state;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     if let Ok(env_filter) = tracing_subscriber::EnvFilter::try_from_env("NOWAY_LOG") {
@@ -20,5 +30,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     tracing::info!("Starting NoWay");
+    let mut event_loop = EventLoop::try_new()?;
+    let mut display = Display::new()?;
+    let state = NoWayState::try_new(event_loop.handle(), event_loop.get_signal(), &mut display)?;
+    let mut data = NoWayData { state, display };
+
+    initialize_winit(&mut event_loop, &mut data)?;
+    event_loop.run(None, &mut data, move |_| {})?;
+
     Ok(())
 }
