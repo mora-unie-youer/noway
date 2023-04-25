@@ -10,8 +10,8 @@ use smithay::{
         },
     },
     wayland::{
-        compositor::CompositorState, output::OutputManagerState, shm::ShmState,
-        socket::ListeningSocketSource,
+        compositor::CompositorState, output::OutputManagerState, shell::xdg::XdgShellState,
+        shm::ShmState, socket::ListeningSocketSource,
     },
 };
 
@@ -40,6 +40,7 @@ pub struct NoWayState {
     pub compositor_state: CompositorState,
     pub output_manager_state: OutputManagerState,
     pub shm_state: ShmState,
+    pub xdg_shell_state: XdgShellState,
 }
 
 impl NoWayState {
@@ -57,6 +58,7 @@ impl NoWayState {
         let compositor_state = CompositorState::new::<Self>(&dh);
         let output_manager_state = OutputManagerState::new_with_xdg_output::<Self>(&dh);
         let shm_state = ShmState::new::<Self>(&dh, vec![]);
+        let xdg_shell_state = XdgShellState::new::<Self>(&dh);
 
         Ok(Self {
             start_time,
@@ -70,6 +72,7 @@ impl NoWayState {
             compositor_state,
             output_manager_state,
             shm_state,
+            xdg_shell_state,
         })
     }
 
